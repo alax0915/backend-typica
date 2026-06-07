@@ -2048,7 +2048,7 @@ app.post('/api/admin/withdrawal/reject/:id', verifyAdmin, async (req, res) => {
 app.post('/api/admin/recharge/approve/:id', verifyAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { adminVerifiedRef, adminUid } = req.body;
+        const { adminVerifiedRef, adminUid } = req.body || {};
         
         if (!adminVerifiedRef) {
             return res.status(400).json({ error: 'Admin verification reference required' });
@@ -2082,18 +2082,21 @@ app.post('/api/admin/recharge/approve/:id', verifyAdmin, async (req, res) => {
                 adminVerifiedRef
             });
             
-            // Log transaction
+            const userTransactionRef = rechargeData.transactionRef || rechargeData.transactionId || null;
             const txRef = db.collection('transactions').doc();
-            t.set(txRef, {
+            const txData = {
                 userId: rechargeData.uid,
                 type: 'recharge_approved',
                 amount: rechargeData.amount,
                 description: `Recharge approved via ${rechargeData.method}`,
                 method: rechargeData.method,
-                userTransactionRef: rechargeData.transactionRef,
                 adminVerifiedRef,
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
-            });
+            };
+            if (userTransactionRef) {
+                txData.userTransactionRef = userTransactionRef;
+            }
+            t.set(txRef, txData);
         });
         
         // Log activity
@@ -2114,7 +2117,7 @@ app.post('/api/admin/recharge/approve/:id', verifyAdmin, async (req, res) => {
 app.post('/api/admin/recharge/reject/:id', verifyAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { adminUid } = req.body;
+        const { adminUid } = req.body || {};
         
         await db.runTransaction(async (t) => {
             const rechargeRef = db.collection('recharges').doc(id);
