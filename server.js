@@ -453,9 +453,10 @@ app.post('/api/user/update-bank', async (req, res) => {
 // --- NEW ROUTE: RECHARGE REQUEST ---
 app.post('/api/recharge/request', async (req, res) => {
     try {
-        const { uid, amount, method, phoneNumber, transactionRef } = req.body;
+        const { uid, amount, method, phoneNumber, transactionRef, transactionId } = req.body || {};
+        const finalTransactionRef = (transactionRef || transactionId || '').toString().trim();
 
-        if (!uid || !amount || !method || !transactionRef) {
+        if (!uid || !amount || !method || !finalTransactionRef) {
             return res.status(400).json({ error: "Missing required recharge data" });
         }
 
@@ -466,8 +467,8 @@ app.post('/api/recharge/request', async (req, res) => {
             amount: parseFloat(amount),
             method: method,
             phoneNumber: phoneNumber || "Unknown",
-            transactionRef: transactionRef,
-            transactionId: transactionRef,
+            transactionRef: finalTransactionRef,
+            transactionId: finalTransactionRef,
             status: 'pending', // Requires manual admin approval to update balance
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
