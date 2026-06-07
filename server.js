@@ -24,6 +24,7 @@ try {
 }
 
 const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 
 function getVipLevel(referralCount = 0) {
     if (referralCount >= 70) return 'VIP5';
@@ -2088,8 +2089,8 @@ app.post('/api/admin/recharge/approve/:id', verifyAdmin, async (req, res) => {
                 userId: rechargeData.uid,
                 type: 'recharge_approved',
                 amount: rechargeData.amount,
-                description: `Recharge approved via ${rechargeData.method}`,
-                method: rechargeData.method,
+                description: `Recharge approved via ${rechargeData.method || 'unknown'}`,
+                method: rechargeData.method || 'unknown',
                 adminVerifiedRef,
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             };
